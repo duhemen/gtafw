@@ -2,7 +2,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
 ![PyQt6](https://img.shields.io/badge/PyQt6-6.7%2B-green?style=for-the-badge&logo=qt)
-![Network](https://img.shields.io/badge/Socket-Native%20Raw-orange?style=for-the-badge)
+![Network](https://img.shields.io/badge/Socket-Native%20Raw-orange?style=for-the-badge&logo=python)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Only-0078D6?style=for-the-badge&logo=windows)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
@@ -27,13 +27,45 @@ Berdasarkan hasil pengujian langsung pada lobi publik GTA Online (*Public Sessio
 
 ## 🚀 Fitur Utama
 
-- 🧬 **Composite Device Fingerprinting (`FP`)**: Menggabungkan parameter header `IP + TTL` menjadi Signature Hash 8-karakter unik untuk mengenali perangkat modder meskipun mereka mengganti alamat IP atau menggunakan VPN.
-- 🔍 **Real-time RID Parsing**: Membedah *payload* biner UDP RAGE Engine secara instan untuk mendeteksi identitas asli Rockstar ID pemain.
-- ⚡ **Automated Attack Mitigation**: Algoritma mitigasi otomatis terhadap serangan *Crash Packets* (>1400 Bytes) dan *Packet Flooding* (>280 PPS dengan sistem 3x penalti toleransi).
-- 🛡️ **Smart Anti-Self Block**: Mekanisme filtrasi otomatis untuk mendeteksi IP lokal PC serta lalu lintas *broadcast* agar tidak memblokir diri sendiri.
-- 🧱 **Windows Firewall Integration**: Menambahkan dan menghapus aturan *Inbound/Outbound* secara *native* via API `netsh` Windows Firewall.
-- 📜 **Persistent Database**: Menyimpan daftar Whitelist IP, Blacklist, dan Banned RID secara otomatis ke berkas teks lokal.
-- 🧹 **Graceful Emergency Cleanup**: Tombol reset darurat dan pembersihan otomatis aturan firewall saat aplikasi ditutup.
+---
+## 1. Panel Kontrol Utama & Integrasi Windows Firewall
+Berada di bagian paling atas aplikasi, panel ini bertindak sebagai sakelar utama sistem keamanan:
+
+* Native Raw Socket Sniffer: Ketika tombol "Aktifkan Proteksi" ditekan, aplikasi membuka soket mentah (raw socket) langsung di Windows untuk mencegat dan menganalisis lalu lintas jaringan UDP pada port permainan GTA Online (Default: Port 6672).
+* Real-time Status Indicator: Menampilkan status aktif hijau (STATUS FIREWALL: RUNNING (PROTECTED)) atau merah saat tidak aktif (PROTECTION DISABLED).
+* Emergency Firewall Flush: Tombol "Reset Semua Aturan Windows" berfungsi membersihkan seluruh aturan pemblokiran IP masuk dan keluar buatan aplikasi secara bersih dari Windows Advanced Firewall menggunakan skrip netsh, memulihkan jaringan Anda secara instan jika terjadi salah blokir.
+
+## 2. Tab "Clean Players" (Pemantauan Lobi Tradisional)
+Tab pertama ini mempertahankan fungsionalitas dasar pemantauan jaringan lobi secara interaktif:
+
+* Lobby Discovery List: Menampilkan daftar pemain bersih yang terhubung di dalam lobi permainan secara langsung (Alamat IP, Rockstar ID/RID, dan ID Fingerprint unik mereka) beserta ukuran data yang mereka kirim.
+* Anti-Cheat Activity Logs: Konsol hitam interaktif berbasis teks untuk mencatat log aktivitas (misalnya: penangkapan socket, status pemblokiran jaringan, informasi penemuan IP).
+* Manual Management (Whitelist & Blacklist):
+* Anda bisa memindahkan teman ke kolom Whitelist agar mereka tidak terpengaruh oleh sistem pemblokiran otomatis.
+   * Anda bisa melakukan Ban Permanen RID atau memasukkan IP pengganggu ke daftar Blacklist untuk diblokir secara manual melalui Windows Firewall.
+
+## 3. Tab "Malicious Players" (Sistem Deteksi Modder Otomatis — Fitur Baru)
+Ini adalah modul kecerdasan buatan utama yang membedakan versi v2.5 dari versi-versi sebelumnya:
+
+* Triage Statistik Modder: Menghitung jumlah ancaman secara real-time yang dikelompokkan ke dalam kategori khusus: Hacker, Cheater, Moderator, Exploiter, MultiAuth, Bot, dan Script Kiddie.
+* Classification Engine (Mesin Pengukur Skor Kepercayaan): Menganalisis paket data masuk berdasarkan indikator bobot ancaman:
+* Ukuran Paket (>1400 Bytes): Terdeteksi sebagai serangan Crash Packet.
+   * Pelanggaran PPS (Packet Per Second): Mengukur batas banjir paket (Flooding) saat modder mengirim data abnormal di atas 280 PPS.
+   * Anomali Jaringan & Perilaku: Mendeteksi pemalsuan IP (IP Spoofing) atau pembajakan RID.
+* Auto-Ban High Confidence Threats: Jika pemain mengumpulkan Confidence Score keamanan $\ge 0.8$, GTAFW akan melabeli mereka sebagai ancaman kritis, memancarkan sinyal peringatan merah, dan otomatis memblokir IP modder tersebut menggunakan firewall tanpa perlu intervensi manual dari Anda.
+* Detection Evidence Viewer: Kolom bawah berwarna merah marun berfungsi menampilkan berkas bukti forensik secara rinci mengapa pemain tersebut diklasifikasikan sebagai modder (menyertakan stempel waktu kejadian, tingkat keparahan ancaman, dan deskripsi aktivitas ilegalnya).
+
+## 4. Tab "History" (Persistent Log Database)
+Berfungsi sebagai basis data jangka panjang agar sistem proteksi tetap berjalan meskipun aplikasi atau komputer Anda dinyalakan ulang:
+
+* Database Persisten JSON: Semua data modder yang pernah terdeteksi disimpan rapi ke berkas lokal malicious_players.json.
+* Riwayat Kunjungan Sesi (Session Tracker): Mencatat seberapa sering modder tersebut berpapasan dengan Anda di lobi GTA Online (session_count) dan kapan terakhir kali mereka terlihat (last_seen).
+* Memory & Storage Optimizer: Menyediakan fungsi "Cleanup Old Entries" untuk menghapus log modder yang sudah usang (misalnya data yang sudah lebih dari 7 hari atau 30 hari) agar basis data tetap ringan dan tidak membebani memori RAM komputer Anda.
+
+## 5. Mekanisme Keamanan Jaringan "Host Fingerprint" (Anti-False Positive)
+
+* Kombinasi IP + TTL (Time to Live): Modder sering kali menggunakan VPN atau fitur IP Spoofing untuk meniru alamat IP pemain bersih di lobi. GTAFW memitigasi hal ini dengan mengombinasikan IP dan nilai TTL paket data dengan enkripsi hash SHA-256 untuk menghasilkan 8 karakter Fingerprint Unik.
+* Fungsi ini memastikan sistem tidak akan melakukan pemblokiran massal yang salah sasaran (false positive) kepada pemain bersih yang kebetulan memiliki IP serupa akibat manipulasi modder.
 
 ---
 
@@ -74,7 +106,7 @@ Buka **PowerShell / Command Prompt** (Run as Administrator):
 
 ```powershell
 python -m venv .gtafw
-.\.gtafw\Scripts\activate
+.\gtafw\Scripts\activate
 
 ```
 
@@ -83,8 +115,6 @@ python -m venv .gtafw
 ```powershell
 pip install --upgrade pip
 pip install -r requirements.txt
-
-```
 
 ---
 
@@ -95,8 +125,6 @@ Aplikasi membutuhkan akses mentah ke Kartu Jaringan (*Network Interface Card*) d
 ```powershell
 # Pastikan venv .gtafw aktif
 python main.py
-
-```
 
 ---
 
