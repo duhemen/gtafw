@@ -12,7 +12,9 @@
 
 ## 🖼️ Tampilan Sistem & Review Operasional
 
-![GTAFW System Interface](gtafw.png)
+![GTAFW System Interface](clean_player.png)
+![GTAFW System Interface](malicious_player.png)
+![GTAFW System Interface](history.png)
 
 ### 📊 Review Performa & Pengujian Sesi Publik
 
