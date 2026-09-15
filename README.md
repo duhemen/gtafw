@@ -1,4 +1,4 @@
-# 🛡️ GTA Firewall (GTAFW) v2.5
+# GTA Firewall (GTAFW) v2.5.1
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
 ![PyQt6](https://img.shields.io/badge/PyQt6-6.7%2B-green?style=for-the-badge&logo=qt)
@@ -6,139 +6,123 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20Only-0078D6?style=for-the-badge&logo=windows)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
-**GTAFW (GTA Firewall)** adalah aplikasi keamanan jaringan lokal tingkat lanjut berbasis **PyQt6** dan **Native Raw Sockets**. Aplikasi ini dirancang khusus untuk memproteksi sesi lobi GTA Online dari *Modder*, serangan *Crash Packet*, dan *Lobby Flooding* melalui ekstraksi **Rockstar ID (RID)** serta **Device Fingerprinting (`FP`)** secara real-time pada protokol P2P UDP port 6672.
+**GTAFW (GTA Firewall)** adalah aplikasi keamanan jaringan lokal berbasis **PyQt6** dan **Native Raw Sockets**. Aplikasi ini memproteksi sesi lobi GTA Online dari *modder*, serangan *crash packet*, dan *lobby flooding* melalui ekstraksi **Rockstar ID (RID)** serta **device fingerprint (`FP`)** secara real-time pada protokol P2P UDP port **6672**.
+
+Mode default adalah **MONITOR ONLY**: ancaman dilaporan, tetapi blokir heuristik otomatis dimatikan sampai checkbox **Auto-Ban** diaktifkan. Ban RID/blacklist yang Anda setel manual tetap berlaku.
 
 ---
 
-## 🖼️ Tampilan Sistem & Review Operasional
+## Tampilan Sistem & Review Operasional
 
-![GTAFW System Interface](clean_player.png)
-![GTAFW System Interface](malicious_player.png)
-![GTAFW System Interface](history.png)
+![GTAFW System Interface](gtafw.png)
 
-### 📊 Review Performa & Pengujian Sesi Publik
+### Review Performa & Pengujian Sesi Publik
 
-Berdasarkan hasil pengujian langsung pada lobi publik GTA Online (*Public Session*):
+Berdasarkan pengujian pada lobi publik GTA Online (*Public Session*):
 
-* **Stabilitas Lobi (Zero Session Split)**: Aplikasi berhasil memantau lalu lintas P2P tanpa memicu *disconnect* massal (*lobby split*). Pemain resmi tetap terhubung secara stabil.
-* **Presisi Device Fingerprinting (`FP`)**: Setiap klien *peer* yang terhubung mendapatkan Hash Fingerprint unik (contoh: `FP: 041A7CD4`, `FP: 3F1051E9`). Hal ini mencegah kesalahan pemblokiran acak (*false positive*) yang kerap terjadi pada metode pemblokiran IP Range.
-* **Bypass IP Lokal Keras**: Sistem secara otomatis mengecualikan IP host lokal (`192.168.43.113`) dan IP *loopback/broadcast*, sehingga aplikasi aman dari risiko *self-block*.
-* **Lightweight Sniffing Engine**: Penggunaan Raw Socket bawaan Python menghilangkan ketergantungan pada pustaka pihak ketiga seperti Scapy atau Npcap driver, sehingga konsumsi CPU dan RAM tetap minim saat game berjalan.
+* **Stabilitas lobi**: pemantauan P2P tanpa memicu disconnect massal (*lobby split*).
+* **Device fingerprinting (`FP`)**: setiap peer mendapat hash 8 karakter dari IP + TTL (contoh: `FP: 041A7CD4`).
+* **Bypass IP lokal**: host, loopback, multicast, dan alamat privat RFC1918 dikecualikan agar tidak *self-block*.
+* **Sniffing ringan**: raw socket bawaan Python, tanpa Scapy/Npcap.
 
 ---
 
-## 🚀 Fitur Utama
+## Fitur Utama
 
----
-## 1. Panel Kontrol Utama & Integrasi Windows Firewall
-Berada di bagian paling atas aplikasi, panel ini bertindak sebagai sakelar utama sistem keamanan:
+### 1. Panel kontrol & Windows Firewall
 
-* Native Raw Socket Sniffer: Ketika tombol "Aktifkan Proteksi" ditekan, aplikasi membuka soket mentah (raw socket) langsung di Windows untuk mencegat dan menganalisis lalu lintas jaringan UDP pada port permainan GTA Online (Default: Port 6672).
-* Real-time Status Indicator: Menampilkan status aktif hijau (STATUS FIREWALL: RUNNING (PROTECTED)) atau merah saat tidak aktif (PROTECTION DISABLED).
-* Emergency Firewall Flush: Tombol "Reset Semua Aturan Windows" berfungsi membersihkan seluruh aturan pemblokiran IP masuk dan keluar buatan aplikasi secara bersih dari Windows Advanced Firewall menggunakan skrip netsh, memulihkan jaringan Anda secara instan jika terjadi salah blokir.
+* **Native Raw Socket Sniffer**: tombol **Aktifkan Proteksi** membuka raw socket Windows dan menganalisis UDP port 6672.
+* **Status real-time**: hijau `STATUS FIREWALL: RUNNING (PROTECTED)` atau merah `PROTECTION DISABLED`.
+* **Emergency flush**: **Reset Semua Aturan Windows** menghapus aturan `GTAFW_Block_*` (masuk dan keluar) via `netsh`.
+* **Auto-Ban (opsional, default OFF)**: jika ON, IP dengan *confidence* **≥ 0.85** serta heuristik crash/flood (RID terkonfirmasi) diblokir otomatis.
 
-## 2. Tab "Clean Players" (Pemantauan Lobi Tradisional)
-Tab pertama ini mempertahankan fungsionalitas dasar pemantauan jaringan lobi secara interaktif:
+### 2. Tab Clean Players
 
-* Lobby Discovery List: Menampilkan daftar pemain bersih yang terhubung di dalam lobi permainan secara langsung (Alamat IP, Rockstar ID/RID, dan ID Fingerprint unik mereka) beserta ukuran data yang mereka kirim.
-* Anti-Cheat Activity Logs: Konsol hitam interaktif berbasis teks untuk mencatat log aktivitas (misalnya: penangkapan socket, status pemblokiran jaringan, informasi penemuan IP).
-* Manual Management (Whitelist & Blacklist):
-* Anda bisa memindahkan teman ke kolom Whitelist agar mereka tidak terpengaruh oleh sistem pemblokiran otomatis.
-   * Anda bisa melakukan Ban Permanen RID atau memasukkan IP pengganggu ke daftar Blacklist untuk diblokir secara manual melalui Windows Firewall.
+* Daftar pemain di lobi: IP, RID, FP, dan ukuran payload.
+* Log aktivitas anti-cheat.
+* Whitelist teman dan blacklist/ban permanen RID secara manual.
 
-## 3. Tab "Malicious Players" (Sistem Deteksi Modder Otomatis — Fitur Baru)
-Ini adalah modul kecerdasan buatan utama yang membedakan versi v2.5 dari versi-versi sebelumnya:
+### 3. Tab Malicious Players
 
-* Triage Statistik Modder: Menghitung jumlah ancaman secara real-time yang dikelompokkan ke dalam kategori khusus: Hacker, Cheater, Moderator, Exploiter, MultiAuth, Bot, dan Script Kiddie.
-* Classification Engine (Mesin Pengukur Skor Kepercayaan): Menganalisis paket data masuk berdasarkan indikator bobot ancaman:
-* Ukuran Paket (>1400 Bytes): Terdeteksi sebagai serangan Crash Packet.
-   * Pelanggaran PPS (Packet Per Second): Mengukur batas banjir paket (Flooding) saat modder mengirim data abnormal di atas 280 PPS.
-   * Anomali Jaringan & Perilaku: Mendeteksi pemalsuan IP (IP Spoofing) atau pembajakan RID.
-* Auto-Ban High Confidence Threats: Jika pemain mengumpulkan Confidence Score keamanan $\ge 0.8$, GTAFW akan melabeli mereka sebagai ancaman kritis, memancarkan sinyal peringatan merah, dan otomatis memblokir IP modder tersebut menggunakan firewall tanpa perlu intervensi manual dari Anda.
-* Detection Evidence Viewer: Kolom bawah berwarna merah marun berfungsi menampilkan berkas bukti forensik secara rinci mengapa pemain tersebut diklasifikasikan sebagai modder (menyertakan stempel waktu kejadian, tingkat keparahan ancaman, dan deskripsi aktivitas ilegalnya).
+Klasifikasi: Hacker, Cheater, Moderator, Exploiter, MultiAuth, Bot, Script Kiddie.
 
-## 4. Tab "History" (Persistent Log Database)
-Berfungsi sebagai basis data jangka panjang agar sistem proteksi tetap berjalan meskipun aplikasi atau komputer Anda dinyalakan ulang:
+Indikator mesin skor:
 
-* Database Persisten JSON: Semua data modder yang pernah terdeteksi disimpan rapi ke berkas lokal malicious_players.json.
-* Riwayat Kunjungan Sesi (Session Tracker): Mencatat seberapa sering modder tersebut berpapasan dengan Anda di lobi GTA Online (session_count) dan kapan terakhir kali mereka terlihat (last_seen).
-* Memory & Storage Optimizer: Menyediakan fungsi "Cleanup Old Entries" untuk menghapus log modder yang sudah usang (misalnya data yang sudah lebih dari 7 hari atau 30 hari) agar basis data tetap ringan dan tidak membebani memori RAM komputer Anda.
+* Ukuran paket **> 1600 byte** (crash packet), butuh **3 paket besar beruntun** sebelum aksi heuristik.
+* Pelanggaran PPS di atas **500 paket/detik**, dihitung per jendela 1 detik (bukan per paket).
+* Anomali jaringan (TTL ekstrem) dan RID mismatch (satu IP, banyak RID).
 
-## 5. Mekanisme Keamanan Jaringan "Host Fingerprint" (Anti-False Positive)
+Ambang auto-ban klasifikasi: *confidence* **≥ 0.85** dan checkbox Auto-Ban aktif.
 
-* Kombinasi IP + TTL (Time to Live): Modder sering kali menggunakan VPN atau fitur IP Spoofing untuk meniru alamat IP pemain bersih di lobi. GTAFW memitigasi hal ini dengan mengombinasikan IP dan nilai TTL paket data dengan enkripsi hash SHA-256 untuk menghasilkan 8 karakter Fingerprint Unik.
-* Fungsi ini memastikan sistem tidak akan melakukan pemblokiran massal yang salah sasaran (false positive) kepada pemain bersih yang kebetulan memiliki IP serupa akibat manipulasi modder.
+### 4. Tab History
+
+* Persistensi JSON di `malicious_players.json`.
+* `session_count` dan `last_seen`.
+* **Cleanup Old Entries** menghapus entri lebih dari 7 hari.
+
+### 5. Fingerprint host (anti false-positive)
+
+Kombinasi IP + TTL di-hash SHA-256 (8 karakter) agar spoof IP tidak meniru fingerprint pemain lain.
 
 ---
 
-## 📁 Struktur Proyek
+## Struktur Proyek
 
 ```text
 gtafw/
-├── .gtafw/                # Environment virtual Python
+├── .gtafw/                     # Virtual environment Python
 ├── src/
-│   ├── __init__.py        # Module package initializer
-│   ├── core.py            # Engine sniffing Native Raw Socket & Fingerprinting
-│   ├── firewall.py        # Modul manipulasi Windows Firewall (netsh API)
-│   └── gui.py             # User Interface PyQt6 & Signal Router
-├── gtafw.png              # Tangkapan layar antarmuka & review sistem
-├── main.py                # Entry point & privilege checker (Admin Escalation)
-├── README.md              # Dokumentasi teknis proyek
-└── requirements.txt       # Daftar dependensi Python (PyQt6)
-
+│   ├── __init__.py
+│   ├── core.py                 # Raw socket sniffer & fingerprint
+│   ├── firewall.py             # Windows Firewall (netsh)
+│   ├── gui.py                  # UI PyQt6 & signal router
+│   └── malicious_player.py     # Klasifikasi, tracker, database JSON
+├── gtafw.png
+├── main.py                     # Entry point & cek Administrator
+├── README.md
+└── requirements.txt            # PyQt6
 ```
 
 ---
 
-## ⚙️ Panduan Instalasi
+---
 
-Sistem ini wajib dioperasikan pada OS Windows dengan hak akses Administrator.
+## ⚙️ Panduan Instalasi & Menjalankan
 
-### 1. Kloning Repositori & Masuk ke Direktori
+Aplikasi membutuhkan akses mentah ke Kartu Jaringan (*Network Interface*) dan Windows Firewall melalui skrip `netsh` (wajib **Run as Administrator**).
 
+### Cara Menjalankan (Opsi Cepat `.exe`)
+Untuk pengguna umum, Anda bisa menggunakan file executable di folder `dist/` setelah memastikan hak akses Administrator terpenuhi.
+
+### Instalasi Source Code (Developer)
+1. Kloning repositori:
 ```powershell
-git clone [https://github.com/duhemen/gtafw.git](https://github.com/duhemen/gtafw.git)
+git clone https://github.com/duhemen/gtafw.git
 cd gtafw
-
 ```
-
-### 2. Membuat & Mengaktifkan Virtual Environment
-
-Buka **PowerShell / Command Prompt** (Run as Administrator):
-
+2. Buat dan aktifkan virtual environment di PowerShell/Command Prompt (Administrator):
 ```powershell
 python -m venv .gtafw
-.\gtafw\Scripts\activate
-
+.\.gtafw\Scripts\activate
+```
+3. Instal dependensi:
+```powershell
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python main.py
 ```
 
-### 3. Menginstal Dependensi
-
-```powershell
-pip install --upgrade pip
-pip install -r requirements.txt
-
 ---
 
-## 🎮 Cara Menjalankan Aplikasi
+## 📖 Panduan Penggunaan & Confidence Score
 
-Aplikasi membutuhkan akses mentah ke Kartu Jaringan (*Network Interface Card*) dan Windows Firewall. **Wajib dijalankan sebagai Administrator**.
-
-```powershell
-# Pastikan venv .gtafw aktif
-python main.py
+1. **Proteksi & Whitelist:** Aktifkan proteksi saat sesi GTA Online (UDP 6672) dan pindahkan teman ke whitelist.
+2. **Manajemen Ban:** Lakukan ban manual (pastikan RID bukan `UNKNOWN_RID`) atau gunakan auto-ban jika diaktifkan. Gunakan reset aturan Windows jika diperlukan.
+3. **Confidence Score (0.00 - 1.00):**
+   * **0.15 - 0.45 (Rendah):** Kemungkinan masalah jaringan/P2P (*False Positive*). **Biarkan saja.**
+   * **0.50 - 0.75 (Sedang):** Indikasi mencurigakan. **Pantau permainan.**
+   * **0.80 - 1.00 (Tinggi):** Valid serangan atau *packet flood*. **Sangat direkomendasikan untuk diblokir.**
 
 ---
-
-## 📖 Panduan Penggunaan
-
-1. **Aktifkan Proteksi**:
-Jalankan aplikasi lalu klik **Aktifkan Proteksi** saat berada di sesi GTA Online. Sistem akan mulai menangkap lalu lintas P2P di port UDP 6672.
-2. **Pantau Klien & Fingerprint**:
-Daftar pemain yang terhubung akan menampilkan IP, Rockstar ID (`RID`), dan Device Fingerprint (`FP`).
-3. **Whitelist Teman**:
-Pilih IP teman di daftar lobi aktif, lalu klik **Pindahkan ke Whitelist** untuk menjamin koneksinya tidak terganggu.
-4. **Permanent Ban RID & Fingerprint**:
-Pilih modder/pengganggu pada tabel aktif, lalu klik **Ban Permanen RID Player Ini**. Identitas RID dan Fingerprint perangkat akan dikunci permanen.
-5. **Reset Emergency**:
-Gunakan tombol **Reset Semua Aturan Windows** untuk membersihkan seluruh aturan pemblokiran firewall buatan GTAFW secara instan.
+🎛️ **Catatan Bijak untuk Pengguna:**  
+Fitur *Auto-Ban* sengaja dinonaktifkan secara bawaan agar Anda memiliki kendali penuh. Gunakan alat ini sebagai sistem peringatan dini, bukan alat untuk memblokir semua orang yang memiliki koneksi internet lambat!
