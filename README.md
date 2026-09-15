@@ -85,11 +85,15 @@ gtafw/
 
 ---
 
----
-
 ## ⚙️ Panduan Instalasi & Menjalankan
 
 Aplikasi membutuhkan akses mentah ke Kartu Jaringan (*Network Interface*) dan Windows Firewall melalui skrip `netsh` (wajib **Run as Administrator**).
+
+### Cara Menjalankan (Opsi Cepat `.exe` - Rekomendasi)
+Untuk pengguna umum, Anda tidak perlu menginstal Python:
+1. Unduh file **`gtafw.exe`** versi terbaru secara gratis melalui halaman [👉 GitHub Releases](https://github.com).
+2. Setelah selesai diunduh, pastikan hak akses Administrator terpenuhi dengan cara **Klik Kanan -> Run as Administrator**.
+
 
 ### Cara Menjalankan (Opsi Cepat `.exe`)
 Untuk pengguna umum, Anda bisa menggunakan file executable di folder `dist/` setelah memastikan hak akses Administrator terpenuhi.
